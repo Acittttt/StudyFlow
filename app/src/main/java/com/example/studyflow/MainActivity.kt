@@ -3,45 +3,44 @@ package com.example.studyflow
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import com.example.studyflow.data.local.UserPreferences
+import com.example.studyflow.ui.navigation.AppNavigation
+import com.example.studyflow.viewmodel.AuthViewModel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import com.example.studyflow.ui.theme.StudyFlowTheme
 
-class MainActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        setContent {
-            StudyFlowTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
-            }
+// Factory sederhana untuk AuthViewModel
+class AuthViewModelFactory(
+    private val userPreferences: UserPreferences
+) : ViewModelProvider.Factory {
+    @Suppress("UNCHECKED_CAST")
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(AuthViewModel::class.java)) {
+            return AuthViewModel(userPreferences) as T
         }
+        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }
 
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
+class MainActivity : ComponentActivity() {
 
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    StudyFlowTheme {
-        Greeting("Android")
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        // Buat instance UserPreferences
+        val userPreferences = UserPreferences(applicationContext)
+
+        // Buat AuthViewModel dengan factory
+        val authViewModel = ViewModelProvider(
+            this,
+            AuthViewModelFactory(userPreferences)
+        ).get(AuthViewModel::class.java)
+
+        setContent {
+            StudyFlowTheme {
+                AppNavigation(authViewModel)
+            }
+        }
     }
 }
