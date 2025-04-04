@@ -3,28 +3,36 @@ package com.example.studyflow.ui.navigation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.remember
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.studyflow.screen.auth.ForgotPasswordScreen
 import com.example.studyflow.screen.auth.LoginScreen
 import com.example.studyflow.screen.auth.RegisterScreen
 import com.example.studyflow.screen.dashboard.DashboardScreen
 import com.example.studyflow.screen.onBoarding.OnBoardingScreen
+import com.example.studyflow.screen.profile.EditProfileScreen
+import com.example.studyflow.screen.profile.ProfileScreen
 import com.example.studyflow.viewmodel.AuthState
 import com.example.studyflow.viewmodel.AuthViewModel
+import com.example.studyflow.viewmodel.ForgotPasswordViewModel
+import com.example.studyflow.viewmodel.ProfileViewModel
 
 @Composable
-fun AppNavigation(authViewModel: AuthViewModel) {
+fun AppNavigation(
+    authViewModel: AuthViewModel,
+    profileViewModel: ProfileViewModel
+) {
     val navController = rememberNavController()
     val authState = authViewModel.authState.collectAsState()
 
-    // Jika authState Idle (misalnya setelah logout), navigasikan ke login
     LaunchedEffect(authState.value) {
         if (authState.value is AuthState.Idle) {
             navController.navigate("login") {
-                popUpTo(0) // Bersihkan seluruh back stack
+                popUpTo(0)
             }
         }
     }
@@ -49,6 +57,9 @@ fun AppNavigation(authViewModel: AuthViewModel) {
                 },
                 onNavigateToRegister = {
                     navController.navigate("register")
+                },
+                onNavigateToForgotPassword = {
+                    navController.navigate("forgotPassword")
                 }
             )
         }
@@ -62,6 +73,20 @@ fun AppNavigation(authViewModel: AuthViewModel) {
                 }
             )
         }
+        composable("forgotPassword") {
+            val forgotPasswordViewModel = remember { ForgotPasswordViewModel() }
+            ForgotPasswordScreen(
+                forgotPasswordViewModel = forgotPasswordViewModel,
+                onPasswordResetSuccess = {
+                    navController.navigate("login") {
+                        popUpTo("forgotPassword") { inclusive = true }
+                    }
+                },
+                onCancel = {
+                    navController.popBackStack()
+                }
+            )
+        }
         composable(
             route = "dashboard/{role}",
             arguments = listOf(navArgument("role") { type = NavType.StringType })
@@ -70,12 +95,32 @@ fun AppNavigation(authViewModel: AuthViewModel) {
             DashboardScreen(
                 role = role,
                 authViewModel = authViewModel,
+                profileViewModel = profileViewModel,
                 onLogout = {
-                    // Panggil logout di ProfileScreen (jika ingin memaksa navigasi langsung)
-                    // Namun, dengan LaunchedEffect di atas, jika authState menjadi Idle, 
-                    // navigasi akan langsung terjadi.
                     authViewModel.logout()
+                },
+                onEditProfile = {
+                    navController.navigate("editProfile")
                 }
+            )
+        }
+        composable("profile") {
+            ProfileScreen(
+                profileViewModel = profileViewModel,
+                onEditProfile = { navController.navigate("editProfile") },
+                onLogout = {
+                    profileViewModel.logout()
+                    navController.navigate("login") {
+                        popUpTo("profile") { inclusive = true }
+                    }
+                }
+            )
+        }
+        composable("editProfile") {
+            EditProfileScreen(
+                profileViewModel = profileViewModel,
+                onProfileUpdated = { navController.popBackStack() },
+                onCancel = { navController.popBackStack() }
             )
         }
     }

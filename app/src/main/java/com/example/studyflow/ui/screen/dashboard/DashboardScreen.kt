@@ -25,14 +25,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.example.studyflow.screen.profile.ProfileScreen
 import com.example.studyflow.viewmodel.AuthViewModel
+import com.example.studyflow.viewmodel.ProfileViewModel
 
 @Composable
 fun DashboardScreen(
     role: String,
     authViewModel: AuthViewModel,
-    onLogout: () -> Unit
+    profileViewModel: ProfileViewModel,
+    onLogout: () -> Unit,
+    onEditProfile: () -> Unit // Callback untuk edit profile
 ) {
-    // Tentukan item navigasi berdasarkan role
     val navItems = if (role == "Owner") {
         listOf("MyClass", "AddClass", "Profile")
     } else {
@@ -45,12 +47,11 @@ fun DashboardScreen(
         bottomBar = {
             NavigationBar {
                 navItems.forEach { item ->
-                    // Pilih icon sesuai dengan nama item
                     val icon = when (item) {
-                        "Home" -> Icons.Filled.Home           // Icon rumah
-                        "MyClass" -> Icons.Filled.Email     // Icon buku
-                        "AddClass" -> Icons.Filled.Add           // Icon tambah
-                        "Profile" -> Icons.Filled.Person         // Icon profile
+                        "Home" -> Icons.Filled.Home
+                        "MyClass" -> Icons.Filled.Email
+                        "AddClass" -> Icons.Filled.Add
+                        "Profile" -> Icons.Filled.Person
                         else -> Icons.Filled.Home
                     }
                     val isSelected = selectedItem == item
@@ -58,7 +59,6 @@ fun DashboardScreen(
                         selected = isSelected,
                         onClick = { selectedItem = item },
                         icon = { Icon(imageVector = icon, contentDescription = item) },
-                        // Gunakan AnimatedVisibility agar text muncul/hilang dengan animasi
                         label = {
                             AnimatedVisibility(
                                 visible = isSelected,
@@ -82,9 +82,9 @@ fun DashboardScreen(
         ) {
             when (selectedItem) {
                 "Profile" -> {
-                    // Tampilkan ProfileScreen yang memiliki tombol logout
                     ProfileScreen(
-                        authViewModel = authViewModel,
+                        profileViewModel = profileViewModel,
+                        onEditProfile = onEditProfile,
                         onLogout = onLogout
                     )
                 }

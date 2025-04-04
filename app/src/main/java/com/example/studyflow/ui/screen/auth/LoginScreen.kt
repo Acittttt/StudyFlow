@@ -13,7 +13,8 @@ import com.example.studyflow.viewmodel.AuthViewModel
 fun LoginScreen(
     authViewModel: AuthViewModel,
     onLoginSuccess: (String) -> Unit,  // callback ketika login berhasil
-    onNavigateToRegister: () -> Unit
+    onNavigateToRegister: () -> Unit,
+    onNavigateToForgotPassword: () -> Unit
 ) {
     val authState by authViewModel.authState.collectAsState()
     var username by remember { mutableStateOf("") }
@@ -44,6 +45,10 @@ fun LoginScreen(
         )
 
         Spacer(modifier = Modifier.height(16.dp))
+
+        TextButton(onClick = onNavigateToForgotPassword) {
+            Text("Lupa Password?")
+        }
 
         Button(
             onClick = { authViewModel.loginUser(username, password) },
