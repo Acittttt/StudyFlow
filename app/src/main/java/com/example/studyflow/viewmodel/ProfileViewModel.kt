@@ -22,6 +22,7 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
     private val apiService: ApiService = RetrofitClient.apiService
     private val userPreferences = UserPreferences(application.applicationContext)
     val userProfile = mutableStateOf<UserProfileResponse?>(null)
+    val tokenFlow = userPreferences.getToken
 
     init {
         getUserProfile()
@@ -30,23 +31,24 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
     fun getUserProfile() {
         viewModelScope.launch {
             val token = userPreferences.fetchToken()
-            Log.d("ProfileViewModel", "Token yang didapat di getUserProfile: $token")
             if (token != null) {
                 try {
                     val response = apiService.getProfile("Bearer $token")
-                    Log.d("ProfileViewModel", "Response code getProfile: ${response.code()}")
+                    Log.d("ProfileViewModel", "Response code: ${response.code()}")
                     if (response.isSuccessful) {
-                        val profileData = response.body()
-                        Log.d("ProfileViewModel", "Data profil diterima: $profileData")
-                        userProfile.value = profileData
+                        val body = response.body()
+                        if (body != null) {
+                            userProfile.value = body.profile
+                        }
                     } else {
-                        Log.d("ProfileViewModel", "Error getUserProfile: ${response.errorBody()?.string()}")
+                        val errorMessage = response.errorBody()?.string()
+                        Log.e("ProfileViewModel", "Error: $errorMessage")
                     }
                 } catch (e: Exception) {
-                    Log.e("ProfileViewModel", "Exception di getUserProfile: ${e.message}", e)
+                    Log.e("ProfileViewModel", "Exception: ${e.message}", e)
                 }
             } else {
-                Log.d("ProfileViewModel", "Token is null in getUserProfile")
+                Log.d("ProfileViewModel", "Token is null or empty")
             }
         }
     }
@@ -92,9 +94,10 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
                     )
                     Log.d("ProfileViewModel", "Response code updateProfile: ${response.code()}")
                     if (response.isSuccessful) {
-                        val updatedProfile = response.body()
-                        Log.d("ProfileViewModel", "Data profil setelah update: $updatedProfile")
-                        userProfile.value = updatedProfile
+                        val body = response.body() // Tipe: UpdateProfileApiResponse?
+                        if (body != null) {
+                            userProfile.value = body.profile
+                        }
                     } else {
                         Log.d("ProfileViewModel", "Error updateProfile: ${response.errorBody()?.string()}")
                     }
@@ -108,6 +111,9 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun logout() {
-        // Implement logout jika diperlukan
+        viewModelScope.launch {
+            userPreferences.clear()
+            userProfile.value = null
+        }
     }
 }

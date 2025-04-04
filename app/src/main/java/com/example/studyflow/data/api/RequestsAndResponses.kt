@@ -47,12 +47,14 @@ data class VerifyUserResponse(
     val message: String?
 )
 
-data class ProfileUpdateRequest(
-    val full_name: String,
-    val username: String,
-    val email: String,
-    val alamat: String,
-    val profile_picture_url: String? = null
+data class ProfileApiResponse(
+    val message: String,
+    val profile: UserProfileResponse
+)
+
+data class UpdateProfileApiResponse(
+    val message: String,
+    val profile: UserProfileResponse
 )
 
 data class UserProfileResponse(
@@ -60,7 +62,8 @@ data class UserProfileResponse(
     val full_name: String,
     val username: String,
     val email: String,
-    val alamat: String,
-    val profile_picture_url: String,
-    val role: String
+    val role: String,
+    val created_at: String,
+    val profile_picture_url: String?,
+    val alamat: String?
 )

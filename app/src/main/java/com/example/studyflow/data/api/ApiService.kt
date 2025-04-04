@@ -20,7 +20,7 @@ interface ApiService {
 
     // Endpoint untuk mengambil profil pengguna
     @GET("profile/data")
-    suspend fun getProfile(@Header("Authorization") token: String): Response<UserProfileResponse>
+    suspend fun getProfile(@Header("Authorization") token: String): retrofit2.Response<ProfileApiResponse>
 
     // Endpoint update profile dengan multipart request (termasuk file gambar)
     @Multipart
@@ -32,5 +32,5 @@ interface ApiService {
         @Part("email") email: RequestBody,
         @Part("alamat") alamat: RequestBody,
         @Part profile_picture: MultipartBody.Part? = null
-    ): Response<UserProfileResponse>
+    ): Response<UpdateProfileApiResponse>
 }

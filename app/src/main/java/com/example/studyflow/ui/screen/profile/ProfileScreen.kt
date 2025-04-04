@@ -1,16 +1,18 @@
 package com.example.studyflow.screen.profile
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import coil.compose.rememberAsyncImagePainter
 import com.example.studyflow.viewmodel.ProfileViewModel
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import coil.compose.AsyncImage
 
 @Composable
 fun ProfileScreen(
@@ -18,47 +20,43 @@ fun ProfileScreen(
     onEditProfile: () -> Unit,
     onLogout: () -> Unit
 ) {
+    val tokenFlow = profileViewModel.tokenFlow
+    val token by tokenFlow.collectAsState(initial = null)
+
+    LaunchedEffect(token) {
+        if (!token.isNullOrEmpty()) {
+            profileViewModel.getUserProfile()
+        } else {
+            profileViewModel.userProfile.value = null
+        }
+    }
+
     val userProfile = profileViewModel.userProfile.value
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Card(
-            modifier = Modifier.size(150.dp)
-        ) {
-            if (userProfile?.profile_picture_url?.isNotEmpty() == true) {
-                Image(
-                    painter = rememberAsyncImagePainter(userProfile.profile_picture_url),
-                    contentDescription = "Profile Picture",
-                    modifier = Modifier.fillMaxSize()
-                )
-            } else {
-                Image(
-                    painter = rememberAsyncImagePainter("https://via.placeholder.com/150"),
-                    contentDescription = "Default Profile Picture",
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
-        }
+    if (userProfile == null) {
+        Text("Loading profile or no data yet...")
+        return
+    }
+    Column(Modifier.verticalScroll(rememberScrollState())) {
+        AsyncImage(
+            model = userProfile.profile_picture_url ?: "",
+            contentDescription = "Profile Picture"
+        )
+        Text("Full Name: ${userProfile.full_name}")
+        Text("Username: ${userProfile.username}")
+        Text("Email: ${userProfile.email}")
+        Text("Alamat: ${userProfile.alamat}")
+        Text("Role: ${userProfile.role}")
+        Text("Created At: ${userProfile.created_at}")
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Text(text = "Username: ${userProfile?.username ?: ""}")
-        Text(text = "Nama Lengkap: ${userProfile?.full_name ?: ""}")
-        Text(text = "Email: ${userProfile?.email ?: ""}")
-        Text(text = "Alamat: ${userProfile?.alamat ?: ""}")
-        Text(text = "Role: ${userProfile?.role ?: ""}")
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Button(onClick = { onEditProfile() }) {
+        // Tombol edit dan logout
+        Button(onClick = onEditProfile) {
             Text(text = "Edit Profile")
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
         Button(onClick = {
             profileViewModel.logout()
